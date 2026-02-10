@@ -1,0 +1,1740 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>RunPlan</title>
+
+  <!-- Simple modern styling (no build tool needed) -->
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --accent:#22c55e; --muted:#94a3b8; --glass: rgba(255,255,255,0.03);
+      --maxw:1100px; font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; background:linear-gradient(180deg,#071026 0%, #071827 60%); color:#e6eef8;}
+    .wrap{max-width:var(--maxw); margin:28px auto; padding:20px;}
+    header{display:flex;align-items:center;gap:18px;margin-bottom:18px}
+    header h1{font-size:20px;margin:0;}
+    .controls{display:flex;gap:10px; margin-left:auto}
+    button{background:var(--accent);border:0;padding:8px 12px;border-radius:8px;color:#022;cursor:pointer;font-weight:600}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
+    .grid{display:grid;grid-template-columns: 320px 1fr; gap:18px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:16px;border-radius:12px; box-shadow: 0 4px 20px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.02)}
+    label{display:block;font-size:13px;color:var(--muted); margin-bottom:6px}
+    input, select, textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04); background:transparent;color:inherit}
+    .small{font-size:13px;color:var(--muted)}
+    .list{margin-top:10px; display:flex;flex-direction:column;gap:8px}
+    .plan-item{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:10px;border-radius:10px;background:var(--glass);border:1px solid rgba(255,255,255,0.015)}
+    .plan-left{width:100%;display:flex;flex-direction:column;gap:2px}
+    .plan-buttons{display:flex;gap:8px;align-self:flex-end;margin-top:auto}
+    .plan-meta{font-size:13px;color:var(--muted)}
+    .section{margin-top:12px}
+    .week-grid{display:grid;grid-template-columns:repeat(7,1fr); gap:6px}
+    .day{min-height:74px;padding:8px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.01));border:1px dashed rgba(255,255,255,0.02);font-size:13px}
+    .run-chip{display:block;padding:6px;border-radius:6px;margin-top:6px;background:rgba(34,197,94,0.12);color:var(--accent);font-weight:650;font-size:12px;position:relative;cursor:pointer}
+    .run-chip:hover .delete-run{display:block}
+    .delete-run{display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:white;border-radius:50%;width:16px;height:16px;font-size:10px;text-align:center;line-height:16px;cursor:pointer;border:1px solid rgba(255,255,255,0.1)}
+    .workout-chip{display:block;padding:6px;border-radius:6px;margin-top:6px;background:rgba(59,130,246,0.12);color:#3b82f6;font-weight:650;font-size:12px;position:relative;cursor:pointer}
+    .workout-chip:hover .delete-workout{display:block}
+    .delete-workout{display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:white;border-radius:50%;width:16px;height:16px;font-size:10px;text-align:center;line-height:16px;cursor:pointer;border:1px solid rgba(255,255,255,0.1)}
+    .weight-chip{display:block;padding:6px;border-radius:6px;margin-top:6px;background:rgba(168,85,247,0.12);color:#a855f7;font-weight:650;font-size:12px;position:relative;cursor:pointer}
+    .weight-chip:hover .delete-weight{display:block}
+    .delete-weight{display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:white;border-radius:50%;width:16px;height:16px;font-size:10px;text-align:center;line-height:16px;cursor:pointer;border:1px solid rgba(255,255,255,0.1)}
+    .goal-chip{display:block;padding:4px 6px;border-radius:4px;margin-top:4px;background:rgba(34,197,94,0.08);color:var(--accent);font-weight:600;font-size:11px;position:relative}
+    .goal-chip:hover .delete-target{display:block}
+    .delete-target{display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;border-radius:50%;width:14px;height:14px;font-size:9px;text-align:center;line-height:14px;cursor:pointer;border:1px solid rgba(255,255,255,0.1)}
+    .muted{color:var(--muted)}
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+    .flex{display:flex;gap:10px;align-items:center}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+    .stat{padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);text-align:center}
+    .stat .num{font-size:18px;font-weight:700;color:var(--accent)}
+    .controls input[type=file]{display:none}
+    table {width:100%; border-collapse:collapse; margin-top:10px; font-size:13px; color:var(--muted);}
+    th, td {border:1px solid rgba(255,255,255,0.05); padding:6px 4px; text-align:left; vertical-align:top;}
+    th {background:var(--glass); font-weight:600; color:#e6eef8;}
+    .target-header {background: rgba(139, 69, 19, 0.3) !important; color: #ffa94d !important; border-bottom: 2px solid #ffa94d !important;}
+    .week-total {text-align:center; font-weight:600;}
+    .pct {text-align:center; color:var(--accent);}
+    .day-cell {min-width:80px; max-width:100px; vertical-align: top;}
+    .week-table tbody tr {min-height: 74px;}
+    .week-table .day-cell {min-height: 62px; overflow-y: auto;}
+    details {margin-bottom:12px;}
+    summary {cursor:pointer; font-weight:600; padding:8px; border-radius:8px; background:var(--glass);}
+    .progress-container {margin-top:12px; background:rgba(255,255,255,0.05); border-radius:8px; overflow:hidden; height:8px;}
+    .progress-bar {height:100%; transition:width 0.3s ease;}
+    .progress-red {background:#ef4444;}
+    .progress-amber {background:#f59e0b;}
+    .progress-green {background:#22c55e;}
+    .progress-text {font-size:12px; color:var(--muted); margin-top:4px; text-align:center;}
+    .disabled {opacity:0.5; pointer-events:none;}
+    .icon-running, .icon-weights, .icon-weight {display:inline-block; margin-right:4px; font-size:14px;}
+    .target-section {
+      background: rgba(255, 255, 255, 0.10);
+      padding: 4px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+    .plan-header-stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .plan-stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .plan-stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .plan-stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    .form-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .form-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      justify-content: flex-end;
+    }
+    @media(max-width:880px){.grid{grid-template-columns:1fr;}.wrap{padding:12px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36'><rect rx='8' width='36' height='36' fill='%2322c55e'/><path d='M9 20c2-6 5-10 9-10s7 4 9 10' stroke='%230b1220' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>" alt="logo" style="height:44px;border-radius:9px"/>
+      <div>
+        <h1>Personal Running Plans</h1>
+        <div class="small"></div>
+      </div>
+
+      <div class="controls">
+        <button id="exportBtn" title="Export JSON">JSON</button>
+        <button id="exportExcelBtn" title="Export Runs to Excel (CSV)">Excel</button>
+        <label class="btn-ghost" style="padding:7px 10px;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer">
+          Import <input id="importFile" type="file" accept="application/json"/>
+        </label>
+        <button id="clearAll" class="btn-ghost" style="padding:7px 10px;border-radius:8px;">Reset</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- Left column: Create plan + plan list -->
+      <div>
+        <details open>
+          <summary>Create a Plan</summary>
+          <div style="padding:16px 0;">
+            <div class="form-group">
+              <label for="planName">Plan Name</label>
+              <input id="planName" placeholder="Enter your Plan Name"/>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="planStart">Start Date</label>
+                <input id="planStart" type="date"/>
+              </div>
+              <div class="form-group">
+                <label for="planEnd">End Date</label>
+                <input id="planEnd" type="date"/>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button id="createPlan">Create plan</button>
+            </div>
+          </div>
+        </details>
+
+        <details open>
+          <summary>Plans</summary>
+          <div class="card section">
+            <div id="plansList" class="list"></div>
+            <div id="noPlans" class="muted" style="margin-top:8px">No plans yet — create one to get started.</div>
+          </div>
+        </details>
+
+      </div>
+
+      <!-- Right column: Calendar + details -->
+      <div>
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="margin:0">Active Plan</h3>
+            <div id="planHeaderStats" class="plan-header-stats">
+              <!-- Total Ran and Total Planned will be inserted here -->
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <select id="activePlanSelect"></select>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="prevWeek" class="btn-ghost">&lt; Prev</button>
+            <div id="weekLabel" style="min-width:200px;text-align:center;font-weight:600"></div>
+            <button id="nextWeek" class="btn-ghost">Next &gt;</button>
+            <button id="toggleView" class="btn-ghost">All weeks</button>
+            <button id="addRunBtn" class="btn-ghost"><span class="icon-running">✚🏃</span></button>
+            <button id="addWorkoutBtn" class="btn-ghost"><span class="icon-weights">✚🏋️</span></button>
+            <button id="addWeightBtn" class="btn-ghost"><span class="icon-weight">✚⚖️</span></button>
+          </div>
+
+          <div class="section" style="margin-top:14px">
+            <div id="weekGrid"></div>
+          </div>
+
+          <div class="section">
+            <h4 style="margin:0 0 6px 0">Weekly Stats:</h4>
+            <div class="stats-grid" id="weekStats"></div>
+            <!-- Average Progress Bar -->
+            <div id="averageProgress" style="margin-top:12px; display:none;">
+              <div class="progress-text" id="progressText">Average Progress: 0%</div>
+              <div class="progress-container">
+                <div class="progress-bar" id="progressBar" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="card section" style="display:none;">
+          <h3 style="margin:0 0 8px 0">Plan details</h3>
+          <div id="planDetails" class="small muted">Select a plan to see details.</div>
+          <button id="editGoalBtn" class="btn-ghost" style="margin-top:8px; padding:6px 12px; font-size:13px;">Add/Edit Target Goal</button>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal-like simple UI (no external libs) -->
+  <div id="modalRoot" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:40">
+    <div id="modalBackdrop" style="position:absolute; inset:0; background:rgba(0,0,0,0.6)"></div>
+    <div style="position:relative;z-index:50;max-width:540px;width:94%;padding:18px;border-radius:12px;background:linear-gradient(180deg,#081220,#061224);border:1px solid rgba(255,255,255,0.03)">
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    /* Simple RunPlan app (single-file). Data model in localStorage:
+       - plans: [{id, name, startDate (YYYY-MM-DD), endDate, dailyTargets:array[weeks][7], goal}]
+       - runs: [{id, date, distance_km, time_min, notes, planId?}]
+       - workouts: [{id, date, type, notes, planId?}]
+       - weights: [{id, date, weight_kg, notes, planId?}]
+       Active plan stored as activePlanId
+    */
+    (() => {
+      // Utilities
+      const qs = s => document.querySelector(s);
+      const qsa = s => Array.from(document.querySelectorAll(s));
+      const uid = (n=8)=>Math.random().toString(36).slice(2,2+n);
+      const todayISO = ()=> {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2,'0');
+        const day = String(now.getDate()).padStart(2,'0');
+        return `${year}-${month}-${day}`;
+      };
+      const parseISO = d => d ? new Date(d + 'T00:00:00') : null;
+      const formatDate = d => {
+        const dt = (d instanceof Date)? d : parseISO(d);
+        if(!dt) return '';
+        return dt.toLocaleDateString(undefined,{weekday:'short', year:'numeric', month:'short', day:'numeric'});
+      }
+      const formatShortDate = d => {
+        const dt = (d instanceof Date)? d : parseISO(d);
+        if(!dt) return '';
+        return dt.toLocaleDateString(undefined, {month:'short', day:'numeric'});
+      }
+      const formatIsoShort = d => d.slice(5); // MM-DD
+      const isoDate = d => {
+        const dt = (d instanceof Date)? d : parseISO(d);
+        if(!dt) return '';
+        const year = dt.getFullYear();
+        const month = String(dt.getMonth() + 1).padStart(2,'0');
+        const day = String(dt.getDate()).padStart(2,'0');
+        return `${year}-${month}-${day}`;
+      }
+
+      // Storage
+      const storeKey = 'runplan:v1';
+      function loadState(){
+        try{
+          const raw = localStorage.getItem(storeKey);
+          if(!raw) return {plans:[], runs:[], workouts:[], weights:[], activePlanId:null};
+          const state = JSON.parse(raw);
+          // Ensure weights array exists for backward compatibility
+          if (!state.weights) state.weights = [];
+          return state;
+        }catch(e){console.error(e); return {plans:[], runs:[], workouts:[], weights:[], activePlanId:null}}
+      }
+      function saveState(state){
+        localStorage.setItem(storeKey, JSON.stringify(state));
+        renderAll();
+      }
+
+      // Default state
+      let state = loadState();
+
+      // DOM refs
+      const planName = qs('#planName');
+      const planStart = qs('#planStart');
+      const planEnd = qs('#planEnd');
+      const planGoal = qs('#planGoal');
+      const createPlanBtn = qs('#createPlan');
+      const plansList = qs('#plansList');
+      const activePlanSelect = qs('#activePlanSelect');
+      const weekGrid = qs('#weekGrid');
+      const weekLabel = qs('#weekLabel');
+      const prevWeek = qs('#prevWeek');
+      const nextWeek = qs('#nextWeek');
+      const toggleView = qs('#toggleView');
+      const addRunBtn = qs('#addRunBtn');
+      const addWorkoutBtn = qs('#addWorkoutBtn');
+      const addWeightBtn = qs('#addWeightBtn');
+      const planDetails = qs('#planDetails');
+      const editGoalBtn = qs('#editGoalBtn');
+      const exportBtn = qs('#exportBtn');
+      const exportExcelBtn = qs('#exportExcelBtn');
+      const importFile = qs('#importFile');
+      const clearAll = qs('#clearAll');
+      const noPlans = qs('#noPlans');
+      const averageProgress = qs('#averageProgress');
+      const progressBar = qs('#progressBar');
+      const progressText = qs('#progressText');
+      const planHeaderStats = qs('#planHeaderStats');
+
+      // week view state
+      let currentWeekStart = startOfWeek(new Date());
+      let viewMode = 'week'; // 'week' or 'plan'
+
+      // Helpers for weeks - Sunday start
+      function startOfWeek(d){
+        const dt = new Date(d);
+        const day = dt.getDay(); // 0 Sun
+        const diff = 0 - day;
+        dt.setDate(dt.getDate() + diff);
+        dt.setHours(0,0,0,0);
+        return dt;
+      }
+      function addDays(d, n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+
+      // Check if a date is within a plan's date range
+      function isDateInPlan(plan, date) {
+        if (!plan) return false;
+        const planStart = parseISO(plan.startDate);
+        const planEnd = parseISO(plan.endDate);
+        const checkDate = parseISO(date);
+        return checkDate >= planStart && checkDate <= planEnd;
+      }
+
+      // Get weekly target for a plan and week index (sum of daily)
+      function getWeeklyTarget(plan, weekIndex){
+        if(!plan.dailyTargets || plan.dailyTargets.length !== plan.weeks){
+          plan.dailyTargets = Array(plan.weeks).fill().map(() => Array(7).fill(0));
+        }
+        const weekDaily = plan.dailyTargets[weekIndex] || Array(7).fill(0);
+        return weekDaily.reduce((a,b)=>a+b, 0);
+      }
+
+      // Get daily target for day of week in weekIndex
+      function getDailyTarget(plan, weekIndex, dayOfWeek){
+        if(!plan.dailyTargets || plan.dailyTargets.length !== plan.weeks){
+          plan.dailyTargets = Array(plan.weeks).fill().map(() => Array(7).fill(0));
+        }
+        const weekDaily = plan.dailyTargets[weekIndex] || Array(7).fill(0);
+        return weekDaily[dayOfWeek] || 0;
+      }
+
+      // Set daily target
+      function setDailyTarget(plan, weekIndex, dayOfWeek, km){
+        if(!plan.dailyTargets || plan.dailyTargets.length !== plan.weeks){
+          plan.dailyTargets = Array(plan.weeks).fill().map(() => Array(7).fill(0));
+        }
+        plan.dailyTargets[weekIndex][dayOfWeek] = km;
+      }
+
+      // Remove daily target
+      function removeDailyTarget(plan, weekIndex, dayOfWeek){
+        if(!plan.dailyTargets || plan.dailyTargets.length !== plan.weeks){
+          plan.dailyTargets = Array(plan.weeks).fill().map(() => Array(7).fill(0));
+        }
+        plan.dailyTargets[weekIndex][dayOfWeek] = 0;
+      }
+
+      // Remove run
+      function removeRun(runId){
+        state.runs = state.runs.filter(r => r.id !== runId);
+        saveState(state);
+      }
+
+      // Remove workout
+      function removeWorkout(workoutId){
+        state.workouts = state.workouts.filter(w => w.id !== workoutId);
+        saveState(state);
+      }
+
+      // Remove weight
+      function removeWeight(weightId){
+        state.weights = state.weights.filter(w => w.id !== weightId);
+        saveState(state);
+      }
+
+      // Check for duplicate plan name
+      function isDuplicatePlan(name) {
+        return state.plans.some(plan => plan.name.toLowerCase() === name.toLowerCase());
+      }
+
+      // Create plan
+      createPlanBtn.addEventListener('click', ()=>{
+        const name = planName.value.trim();
+        const startInput = planStart.value || todayISO();
+        const endInput = planEnd.value;
+        if(!name){ alert('Please enter a name for the plan.'); return; }
+        if(!endInput){ alert('Please enter an end date.'); return; }
+        if(isDuplicatePlan(name)) { alert('A plan with this name already exists. Please use a different name.'); return; }
+        const start = parseISO(startInput);
+        const end = parseISO(endInput);
+        const diffDays = (end - start) / (1000 * 60 * 60 * 24);
+        const weeks = Math.ceil(diffDays / 7);
+        if(weeks < 1){ alert('End date must be after start date.'); return; }
+        const p = { id: uid(9), name, startDate: startInput, endDate: endInput, weeks, dailyTargets: Array(weeks).fill().map(() => Array(7).fill(0)), goal: '', createdAt: new Date().toISOString() };
+        state.plans.push(p);
+        state.activePlanId = p.id;
+        saveState(state);
+        planName.value=''; planStart.value=''; planEnd.value='';
+      });
+
+      // render plans list & select
+      function renderPlans(){
+        plansList.innerHTML = '';
+        activePlanSelect.innerHTML = '<option value="">— none —</option>';
+        if(state.plans.length===0){ noPlans.style.display='block'; return; } else noPlans.style.display='none';
+        for(const p of state.plans.slice().reverse()){
+          const el = document.createElement('div'); el.className='plan-item';
+          const planLeft = document.createElement('div'); planLeft.className = 'plan-left';
+          planLeft.innerHTML = `<div style="font-weight:700">${escapeHtml(p.name)}</div><div class="plan-meta">${p.weeks} week(s) • ${p.startDate} to ${p.endDate}</div>`;
+          const planButtons = document.createElement('div'); planButtons.className = 'plan-buttons';
+          const use = document.createElement('button'); use.textContent = (state.activePlanId===p.id)?'Active':'Activate';
+          use.className = state.activePlanId===p.id ? '' : 'btn-ghost';
+          use.onclick = ()=>{ state.activePlanId = p.id; saveState(state); };
+          const edit = document.createElement('button'); edit.textContent='Edit'; edit.className='btn-ghost';
+          edit.onclick = ()=> showEditPlanModal(p);
+          const del = document.createElement('button'); del.textContent='Delete'; del.className='btn-ghost';
+          del.onclick = ()=>{ if(confirm('Delete plan and unlink runs?')){ state.plans = state.plans.filter(x=>x.id!==p.id); state.runs = state.runs.map(r=> r.planId===p.id ? Object.assign({},r,{planId:null}) : r); state.workouts = state.workouts.map(w=> w.planId===p.id ? Object.assign({},w,{planId:null}) : w); state.weights = state.weights.map(w=> w.planId===p.id ? Object.assign({},w,{planId:null}) : w); if(state.activePlanId===p.id) state.activePlanId = null; saveState(state); } };
+          planButtons.appendChild(use);
+          planButtons.appendChild(edit);
+          planButtons.appendChild(del);
+          el.appendChild(planLeft); el.appendChild(planButtons);
+          plansList.appendChild(el);
+
+          const opt = document.createElement('option'); opt.value=p.id; opt.textContent = p.name; if(state.activePlanId===p.id) opt.selected=true;
+          activePlanSelect.appendChild(opt);
+        }
+      }
+
+      // Edit plan modal
+      function showEditPlanModal(plan) {
+        showModal(`
+          <h3>Edit Plan</h3>
+          <div class="form-group">
+            <label for="ep_name">Plan Name</label>
+            <input id="ep_name" value="${escapeHtmlAttr(plan.name)}" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ep_start">Start Date</label>
+              <input id="ep_start" type="date" value="${plan.startDate}" />
+            </div>
+            <div class="form-group">
+              <label for="ep_end">End Date</label>
+              <input id="ep_end" type="date" value="${plan.endDate}" />
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button id="ep_save">Save</button>
+            <button id="ep_cancel" class="btn-ghost">Cancel</button>
+          </div>
+        `);
+        setTimeout(() => {
+          const epSave = qs('#ep_save');
+          const epCancel = qs('#ep_cancel');
+          if (epCancel) epCancel.addEventListener('click', hideModal);
+          if (epSave) epSave.addEventListener('click', ()=>{
+            const name = qs('#ep_name').value.trim();
+            const startDate = qs('#ep_start').value;
+            const endDate = qs('#ep_end').value;
+            
+            if(!name){ alert('Please enter a name for the plan.'); return; }
+            if(!endDate){ alert('Please enter an end date.'); return; }
+            
+            // Check for duplicate name (excluding current plan)
+            const isDuplicate = state.plans.some(p => 
+              p.id !== plan.id && p.name.toLowerCase() === name.toLowerCase()
+            );
+            if(isDuplicate) { 
+              alert('A plan with this name already exists. Please use a different name.'); 
+              return; 
+            }
+            
+            const start = parseISO(startDate);
+            const end = parseISO(endDate);
+            const diffDays = (end - start) / (1000 * 60 * 60 * 24);
+            const weeks = Math.ceil(diffDays / 7);
+            if(weeks < 1){ alert('End date must be after start date.'); return; }
+            
+            // Update plan
+            const planIndex = state.plans.findIndex(p => p.id === plan.id);
+            if (planIndex !== -1) {
+              state.plans[planIndex].name = name;
+              state.plans[planIndex].startDate = startDate;
+              state.plans[planIndex].endDate = endDate;
+              state.plans[planIndex].weeks = weeks;
+              
+              // Adjust dailyTargets array if needed
+              if (!state.plans[planIndex].dailyTargets || state.plans[planIndex].dailyTargets.length !== weeks) {
+                const newDailyTargets = Array(weeks).fill().map((_, weekIndex) => {
+                  if (weekIndex < plan.dailyTargets.length) {
+                    return [...plan.dailyTargets[weekIndex]];
+                  } else {
+                    return Array(7).fill(0);
+                  }
+                });
+                state.plans[planIndex].dailyTargets = newDailyTargets;
+              }
+              
+              saveState(state);
+            }
+            hideModal();
+          });
+        }, 0);
+      }
+
+      activePlanSelect.addEventListener('change', e=>{
+        state.activePlanId = e.target.value || null;
+        saveState(state);
+      });
+
+      // Calculate total ran and planned for all weeks in the plan
+      function calculatePlanTotals(activePlan) {
+        let totalRanAllWeeks = 0;
+        let totalPlannedAllWeeks = 0;
+        
+        if (activePlan) {
+          const planStartDate = parseISO(activePlan.startDate);
+          for(let weekNum = 1; weekNum <= activePlan.weeks; weekNum++){
+            const weekIndex = weekNum - 1;
+            const weekSunday = addDays(planStartDate, weekIndex*7);
+            const weekIsos = [];
+            for(let i=0; i<7; i++){
+              weekIsos.push(isoDate(addDays(weekSunday, i)));
+            }
+            const weekRuns = (state.runs || []).filter(r => weekIsos.includes(r.date));
+            const weekTotalRan = weekRuns.reduce((s, r) => s + (parseFloat(r.distance_km) || 0), 0);
+            totalRanAllWeeks += weekTotalRan;
+            totalPlannedAllWeeks += getWeeklyTarget(activePlan, weekIndex);
+          }
+        }
+        
+        return { totalRanAllWeeks, totalPlannedAllWeeks };
+      }
+
+      // Render plan header stats
+      function renderPlanHeaderStats() {
+        const activePlan = state.plans.find(p=>p.id===state.activePlanId);
+        planHeaderStats.innerHTML = '';
+        
+        if (activePlan) {
+          const { totalRanAllWeeks, totalPlannedAllWeeks } = calculatePlanTotals(activePlan);
+          
+          // Total Ran
+          const totalRanEl = document.createElement('div');
+          totalRanEl.className = 'plan-stat-item';
+          totalRanEl.innerHTML = `
+            <div class="plan-stat-value">${totalRanAllWeeks.toFixed(1)}</div>
+            <div class="plan-stat-label">Total Ran</div>
+          `;
+          planHeaderStats.appendChild(totalRanEl);
+          
+          // Total Planned
+          const totalPlannedEl = document.createElement('div');
+          totalPlannedEl.className = 'plan-stat-item';
+          totalPlannedEl.innerHTML = `
+            <div class="plan-stat-value">${totalPlannedAllWeeks.toFixed(1)}</div>
+            <div class="plan-stat-label">Total Planned</div>
+          `;
+          planHeaderStats.appendChild(totalPlannedEl);
+        }
+      }
+
+      // Export Excel (CSV) - All weeks with recorded runs
+      exportExcelBtn.addEventListener('click', () => {
+        const activePlan = state.plans.find(p => p.id === state.activePlanId);
+        if (!activePlan) { alert('Select a plan first.'); return; }
+        const runsByDate = {};
+        for(const r of state.runs || []){ 
+          if (r.planId === activePlan.id) {
+            runsByDate[r.date] = runsByDate[r.date] || [];
+            runsByDate[r.date].push(parseFloat(r.distance_km) || 0);
+          }
+        }
+        let csv = 'Week #,Dates,Sun,Mon,Tue,Wed,Thu,Fri,Sat,Total Ran,Planned,Achieved\n';
+        const planStartDate = parseISO(activePlan.startDate);
+        for(let weekNum = 1; weekNum <= activePlan.weeks; weekNum++){
+          const weekIndex = weekNum - 1;
+          getWeeklyTarget(activePlan, weekIndex); // ensure initialized
+          const weekSunday = addDays(planStartDate, weekIndex*7);
+          const datesStr = `${formatShortDate(weekSunday)} — ${formatShortDate(addDays(weekSunday, 6))}`;
+          let totalRan = 0;
+          let row = `${weekNum},"${datesStr}"`;
+          for(let i=0; i<7; i++){
+            const d = addDays(weekSunday, i);
+            const iso = isoDate(d);
+            const dayRuns = runsByDate[iso] || [];
+            const dayTotal = dayRuns.reduce((a,b)=>a+b, 0);
+            totalRan += dayTotal;
+            row += `,${dayTotal > 0 ? dayTotal.toFixed(1) : ''}`;
+          }
+          const weeklyTarget = getWeeklyTarget(activePlan, weekIndex);
+          const pct = weeklyTarget > 0 ? Math.round(totalRan / weeklyTarget * 100) : 0;
+          row += `,${totalRan.toFixed(1)},${weeklyTarget.toFixed(1)},${pct}%`;
+          csv += row + '\n';
+        }
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${activePlan.name.replace(/[^a-z0-9]/gi, '_')}_all_weeks_runs.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      // Render calendar
+      function renderCalendar(){
+        const activePlan = state.plans.find(p=>p.id===state.activePlanId);
+        const runsByDate = {};
+        for(const r of state.runs || []){ runsByDate[r.date] = runsByDate[r.date] || []; runsByDate[r.date].push(r); }
+        const workoutsByDate = {};
+        for(const w of state.workouts || []){ workoutsByDate[w.date] = workoutsByDate[w.date] || []; workoutsByDate[w.date].push(w); }
+        const weightsByDate = {};
+        for(const w of state.weights || []){ weightsByDate[w.date] = weightsByDate[w.date] || []; weightsByDate[w.date].push(w); }
+
+        // Render plan header stats
+        renderPlanHeaderStats();
+
+        // Enable/disable week navigation buttons based on plan boundaries
+        if (activePlan) {
+          const planStart = parseISO(activePlan.startDate);
+          const planEnd = parseISO(activePlan.endDate);
+          const planStartWeek = startOfWeek(planStart);
+          const planEndWeek = startOfWeek(planEnd);
+          
+          prevWeek.disabled = currentWeekStart <= planStartWeek;
+          nextWeek.disabled = currentWeekStart >= planEndWeek;
+          
+          if (prevWeek.disabled) {
+            prevWeek.classList.add('disabled');
+          } else {
+            prevWeek.classList.remove('disabled');
+          }
+          
+          if (nextWeek.disabled) {
+            nextWeek.classList.add('disabled');
+          } else {
+            nextWeek.classList.remove('disabled');
+          }
+        } else {
+          prevWeek.disabled = false;
+          nextWeek.disabled = false;
+          prevWeek.classList.remove('disabled');
+          nextWeek.classList.remove('disabled');
+        }
+
+        if(viewMode === 'week'){
+          const sunday = currentWeekStart;
+          const days = [];
+          for(let i=0;i<7;i++){ const d=addDays(sunday,i); days.push(d); }
+
+          weekLabel.textContent = `${formatShortDate(sunday)} - ${formatShortDate(addDays(sunday,6))}`;
+
+          weekGrid.className = 'week-grid';
+          weekGrid.style.display = 'grid';
+          weekGrid.innerHTML = '';
+
+          for(let dayIdx=0; dayIdx<7; dayIdx++){
+            const d = days[dayIdx];
+            const iso = isoDate(d);
+            const box = document.createElement('div'); 
+            box.className = 'day';
+            
+            // Check if this date is within the active plan
+            if (activePlan && !isDateInPlan(activePlan, iso)) {
+              box.classList.add('disabled');
+            }
+            
+            const dateTop = document.createElement('div'); dateTop.style.display='flex'; dateTop.style.justifyContent='space-between'; dateTop.style.alignItems='center';
+            dateTop.innerHTML = `<div style="font-weight:700">${d.toLocaleDateString(undefined,{weekday:'short'})}</div><div class="small muted">${d.getMonth()+1}/${d.getDate()}</div>`;
+            box.appendChild(dateTop);
+
+            // daily target or + target button, always on top
+            let targetSection = document.createElement('div'); // Wrapper for target section
+            targetSection.className = 'target-section';
+            if(activePlan && isDateInPlan(activePlan, iso)){
+              const planStart = parseISO(activePlan.startDate);
+              const weekDiff = Math.floor( (sunday.getTime() - planStart.getTime()) / (7 * 24 * 3600 * 1000) );
+              const weekIndex = Math.max(0, weekDiff);
+              const dailyTarget = getDailyTarget(activePlan, weekIndex, dayIdx);
+              if(dailyTarget > 0){
+                const goalChip = document.createElement('div'); goalChip.className='goal-chip';
+                goalChip.textContent = `${dailyTarget.toFixed(1)} KM`;
+                
+                // Add delete button for target
+                const deleteBtn = document.createElement('span'); deleteBtn.className='delete-target';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = (e)=>{
+                  e.stopPropagation();
+                  if(confirm('Remove target for this day?')){
+                    removeDailyTarget(activePlan, weekIndex, dayIdx);
+                    saveState(state);
+                  }
+                };
+                goalChip.appendChild(deleteBtn);
+                targetSection.appendChild(goalChip);
+              } else {
+                const setTargetBtn = document.createElement('button'); setTargetBtn.className='btn-ghost'; setTargetBtn.style.marginTop='4px'; setTargetBtn.style.fontSize='11px'; setTargetBtn.style.padding='4px 6px'; setTargetBtn.style.borderRadius='4px';
+                setTargetBtn.textContent = '+ target';
+                setTargetBtn.onclick = ()=> setDailyTargetModal(activePlan, currentWeekStart, dayIdx);
+                targetSection.appendChild(setTargetBtn);
+              }
+            } else {
+              // If no active plan or date not in plan, still show the button but disabled
+              const setTargetBtn = document.createElement('button'); setTargetBtn.className='btn-ghost'; setTargetBtn.style.marginTop='4px'; setTargetBtn.style.fontSize='11px'; setTargetBtn.style.padding='4px 6px'; setTargetBtn.style.borderRadius='4px';
+              setTargetBtn.textContent = '+ target';
+              setTargetBtn.disabled = true;
+              setTargetBtn.style.opacity = '0.5';
+              setTargetBtn.style.cursor = 'not-allowed';
+              targetSection.appendChild(setTargetBtn);
+            }
+            box.appendChild(targetSection);
+
+            // workouts - DISPLAYED IMMEDIATELY BELOW THE TARGET SECTION
+            const workouts = workoutsByDate[iso] || [];
+            for(const w of workouts){
+              const chip = document.createElement('div'); chip.className='workout-chip';
+              chip.textContent = `${w.type.charAt(0).toUpperCase() + w.type.slice(1)}`;
+              chip.title = w.notes || '';
+              chip.onclick = ()=> showModalWorkoutEdit(w);
+              
+              // Add delete button for workout
+              const deleteBtn = document.createElement('span'); deleteBtn.className='delete-workout';
+              deleteBtn.innerHTML = '×';
+              deleteBtn.onclick = (e)=>{
+                e.stopPropagation();
+                if(confirm('Delete this workout?')){
+                  removeWorkout(w.id);
+                }
+              };
+              chip.appendChild(deleteBtn);
+              box.appendChild(chip);
+            }
+
+            // runs - DISPLAYED BELOW WORKOUTS
+            const runs = runsByDate[iso] || [];
+            for(const r of runs){
+              const chip = document.createElement('div'); chip.className='run-chip';
+              const pace = r.time_min && r.distance_km ? (r.time_min / r.distance_km) : null;
+              chip.textContent = `${r.distance_km} KM${pace? ' • ' + pace.toFixed(2) + ' min/km' : ''}`;
+              chip.title = (r.notes || '') + `\n${r.time_min ? r.time_min + ' min' : ''}`;
+              chip.onclick = ()=> showModalRunEdit(r);
+              
+              // Add delete button for run
+              const deleteBtn = document.createElement('span'); deleteBtn.className='delete-run';
+              deleteBtn.innerHTML = '×';
+              deleteBtn.onclick = (e)=>{
+                e.stopPropagation();
+                if(confirm('Delete this run?')){
+                  removeRun(r.id);
+                }
+              };
+              chip.appendChild(deleteBtn);
+              box.appendChild(chip);
+            }
+
+            // weights - DISPLAYED BELOW RUNS
+            const weights = weightsByDate[iso] || [];
+            for(const w of weights){
+              const chip = document.createElement('div'); chip.className='weight-chip';
+              chip.textContent = `${w.weight_kg} kg`;
+              chip.title = w.notes || '';
+              chip.onclick = ()=> showModalWeightEdit(w);
+              
+              // Add delete button for weight
+              const deleteBtn = document.createElement('span'); deleteBtn.className='delete-weight';
+              deleteBtn.innerHTML = '×';
+              deleteBtn.onclick = (e)=>{
+                e.stopPropagation();
+                if(confirm('Delete this weight entry?')){
+                  removeWeight(w.id);
+                }
+              };
+              chip.appendChild(deleteBtn);
+              box.appendChild(chip);
+            }
+
+            weekGrid.appendChild(box);
+          }
+
+          renderWeekStats();
+        } else {
+          if(!activePlan){
+            weekLabel.textContent = 'Select a plan to view all weeks.';
+            weekGrid.innerHTML = '';
+            qs('#weekStats').innerHTML = '';
+            averageProgress.style.display = 'none';
+            return;
+          }
+          weekLabel.textContent = `${activePlan.name} — All weeks`;
+
+          weekGrid.innerHTML = '';
+          weekGrid.style.display = 'block';
+
+          const table = document.createElement('table');
+          table.className = 'week-table';
+          weekGrid.appendChild(table);
+
+          const thead = table.createTHead();
+          const htr = thead.insertRow();
+          const headers = ['Week #', 'Dates', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Total Ran', 'Planned', 'Achieved'];
+          headers.forEach((label, index) => {
+            const th = document.createElement('th');
+            th.textContent = label;
+            // Apply target-header class to the "Planned" column header
+            if (label === 'Planned') {
+              th.className = 'target-header';
+            }
+            htr.appendChild(th);
+          });
+
+          const tbody = table.createTBody();
+          const planStartDate = parseISO(activePlan.startDate);
+          for(let weekNum = 1; weekNum <= activePlan.weeks; weekNum++){
+            const weekIndex = weekNum - 1;
+            getWeeklyTarget(activePlan, weekIndex); // ensure initialized
+            const weekSunday = addDays(planStartDate, weekIndex*7);
+            const weekIsos = [];
+            const days = [];
+            for(let i=0; i<7; i++){
+              const d = addDays(weekSunday, i);
+              const iso = isoDate(d);
+              weekIsos.push(iso);
+              days.push({date: d, iso, dayIdx: i});
+            }
+            const weekRuns = (state.runs || []).filter(r => weekIsos.includes(r.date));
+            const weekWorkouts = (state.workouts || []).filter(w => weekIsos.includes(w.date));
+            const weekWeights = (state.weights || []).filter(w => weekIsos.includes(w.date));
+            const totalRan = weekRuns.reduce((s, r) => s + (parseFloat(r.distance_km) || 0), 0);
+            const weeklyTarget = getWeeklyTarget(activePlan, weekIndex);
+            const pct = weeklyTarget > 0 ? Math.round(totalRan / weeklyTarget * 100) : 0;
+
+            const tr = tbody.insertRow();
+
+            // Week #
+            let td = tr.insertCell();
+            td.textContent = weekNum;
+
+            // Dates
+            td = tr.insertCell();
+            td.textContent = `${formatShortDate(weekSunday)} — ${formatShortDate(addDays(weekSunday, 6))}`;
+
+            // Days
+            for(const day of days){
+              td = tr.insertCell();
+              td.className = 'day-cell';
+
+              // daily target
+              let targetSection = document.createElement('div'); // Wrapper for target section
+              targetSection.className = 'target-section';
+              const dailyTarget = getDailyTarget(activePlan, weekIndex, day.dayIdx);
+              if(dailyTarget > 0){
+                const goalChip = document.createElement('div'); goalChip.className='goal-chip';
+                goalChip.style.fontSize = '10px';
+                goalChip.textContent = `${dailyTarget.toFixed(1)} KM`;
+                
+                // Add delete button for target
+                const deleteBtn = document.createElement('span'); deleteBtn.className='delete-target';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = (e)=>{
+                  e.stopPropagation();
+                  if(confirm('Remove target for this day?')){
+                    removeDailyTarget(activePlan, weekIndex, day.dayIdx);
+                    saveState(state);
+                  }
+                };
+                goalChip.appendChild(deleteBtn);
+                targetSection.appendChild(goalChip);
+              } else {
+                const setTargetBtn = document.createElement('button'); setTargetBtn.className='btn-ghost'; setTargetBtn.style.marginTop='4px'; setTargetBtn.style.fontSize='10px'; setTargetBtn.style.padding='4px 6px'; setTargetBtn.style.borderRadius='4px';
+                setTargetBtn.textContent = '+ target';
+                setTargetBtn.onclick = ()=> setDailyTargetModal(activePlan, weekSunday, day.dayIdx);
+                targetSection.appendChild(setTargetBtn);
+              }
+              td.appendChild(targetSection);
+
+              // workouts - DISPLAYED IMMEDIATELY BELOW THE TARGET SECTION
+              const dayWorkouts = weekWorkouts.filter(w => w.date === day.iso);
+              for(const w of dayWorkouts){
+                const chip = document.createElement('div');
+                chip.className = 'workout-chip';
+                chip.style.fontSize = '10px';
+                chip.style.padding = '2px 4px';
+                chip.textContent = `${w.type.charAt(0).toUpperCase() + w.type.slice(1)}`;
+                chip.title = w.notes || '';
+                chip.onclick = () => showModalWorkoutEdit(w);
+                
+                // Add delete button for workout
+                const deleteBtn = document.createElement('span'); deleteBtn.className='delete-workout';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = (e)=>{
+                  e.stopPropagation();
+                  if(confirm('Delete this workout?')){
+                    removeWorkout(w.id);
+                  }
+                };
+                chip.appendChild(deleteBtn);
+                td.appendChild(chip);
+              }
+
+              // runs - DISPLAYED BELOW WORKOUTS
+              const dayRuns = weekRuns.filter(r => r.date === day.iso);
+              for(const r of dayRuns){
+                const chip = document.createElement('div');
+                chip.className = 'run-chip';
+                const pace = r.time_min && r.distance_km ? (r.time_min / r.distance_km).toFixed(2) : null;
+                chip.textContent = `${r.distance_km} KM${pace ? ' • ' + pace + ' min/km' : ''}`;
+                chip.title = (r.notes || '') + `\n${r.time_min ? r.time_min + ' min' : ''}`;
+                chip.onclick = () => showModalRunEdit(r);
+                chip.style.fontSize = '10px';
+                chip.style.padding = '2px 4px';
+                
+                // Add delete button for run
+                const deleteBtn = document.createElement('span'); deleteBtn.className='delete-run';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = (e)=>{
+                  e.stopPropagation();
+                  if(confirm('Delete this run?')){
+                    removeRun(r.id);
+                  }
+                };
+                chip.appendChild(deleteBtn);
+                td.appendChild(chip);
+              }
+
+              // weights - DISPLAYED BELOW RUNS
+              const dayWeights = weekWeights.filter(w => w.date === day.iso);
+              for(const w of dayWeights){
+                const chip = document.createElement('div');
+                chip.className = 'weight-chip';
+                chip.textContent = `${w.weight_kg} kg`;
+                chip.title = w.notes || '';
+                chip.onclick = () => showModalWeightEdit(w);
+                chip.style.fontSize = '10px';
+                chip.style.padding = '2px 4px';
+                
+                // Add delete button for weight
+                const deleteBtn = document.createElement('span'); deleteBtn.className='delete-weight';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = (e)=>{
+                  e.stopPropagation();
+                  if(confirm('Delete this weight entry?')){
+                    removeWeight(w.id);
+                  }
+                };
+                chip.appendChild(deleteBtn);
+                td.appendChild(chip);
+              }
+            }
+
+            // Total Ran
+            td = tr.insertCell();
+            td.className = 'week-total';
+            td.textContent = totalRan.toFixed(1);
+
+            // Planned
+            td = tr.insertCell();
+            td.className = 'week-total target-header';
+            td.textContent = weeklyTarget.toFixed(1);
+
+            // Achieved
+            td = tr.insertCell();
+            td.className = 'pct';
+            const icon = pct === 0 ? '❌' : (pct >= 100 ? '✅' : '○');
+            td.innerHTML = `${icon} ${pct}%`;
+            if(pct === 0) td.style.color = 'var(--muted)';
+            else if(pct >= 100) td.style.color = 'var(--accent)';
+            else td.style.color = '#f59e0b';
+          }
+
+          renderPlanStats(activePlan);
+        }
+
+        renderPlanDetails();
+      }
+
+      // Set daily target modal
+      function setDailyTargetModal(plan, weekStart, dayIdx){
+        if(!plan) return;
+        const planStart = parseISO(plan.startDate);
+        const weekDiff = Math.floor( (weekStart.getTime() - planStart.getTime()) / (7 * 24 * 3600 * 1000) );
+        const weekIndex = Math.max(0, weekDiff);
+        const current = getDailyTarget(plan, weekIndex, dayIdx);
+        const targetDate = addDays(weekStart, dayIdx);
+        const dayName = targetDate.toLocaleDateString(undefined, {weekday:'long'});
+        showModal(`
+          <h3>Set Target for ${dayName}</h3>
+          <div class="form-group">
+            <label for="dt_km">Target KM</label>
+            <input id="dt_km" type="number" step="0.01" value="${current.toFixed(2)}" />
+          </div>
+          <div class="modal-actions">
+            <button id="dt_save">Save</button>
+            <button id="dt_cancel" class="btn-ghost">Cancel</button>
+          </div>
+        `);
+        setTimeout(() => {
+          const dtSave = qs('#dt_save');
+          const dtCancel = qs('#dt_cancel');
+          if (dtCancel) dtCancel.addEventListener('click', hideModal);
+          if (dtSave) dtSave.addEventListener('click', ()=>{
+            const val = parseFloat(qs('#dt_km').value);
+            if(isNaN(val) || val < 0) {alert('Enter valid km'); return;}
+            setDailyTarget(plan, weekIndex, dayIdx, val);
+            saveState(state);
+            hideModal();
+          });
+        }, 0);
+      }
+
+      // derive sessions for a date from a plan's template lines (repeats weekly across plan duration)
+      function sessionsForDate(plan, dateIso){
+        // No template, return []
+        return [];
+      }
+
+      // Week stats
+      function renderWeekStats(){
+        const sunday = currentWeekStart;
+        const sundayIso = isoDate(sunday);
+        const weekIsos = [];
+        for(let i=0;i<7;i++) weekIsos.push(isoDate(addDays(sunday,i)));
+        const runs = (state.runs || []).filter(r=> weekIsos.includes(r.date));
+        const workouts = (state.workouts || []).filter(w=> weekIsos.includes(w.date));
+        const weights = (state.weights || []).filter(w=> weekIsos.includes(w.date));
+        const totalKm = runs.reduce((s,r)=> s + (parseFloat(r.distance_km)||0), 0);
+        const count = runs.length;
+        const workoutCount = workouts.length;
+        const weightCount = weights.length;
+        const activePlan = state.plans.find(p=>p.id===state.activePlanId);
+        let weeklyTarget = 0;
+        if(activePlan){
+          const planStart = parseISO(activePlan.startDate);
+          const weekDiff = Math.floor( (sunday.getTime() - planStart.getTime()) / (7 * 24 * 3600 * 1000) );
+          if(weekDiff < 0){
+            weeklyTarget = 0;
+          } else {
+            weeklyTarget = getWeeklyTarget(activePlan, weekDiff);
+          }
+        }
+
+        const currentSunday = startOfWeek(new Date());
+        const isPastWeek = currentWeekStart < currentSunday;
+
+        const stats = [
+          {label:'KMs this Week', val: totalKm.toFixed(2)},
+          {label:'Runs this Week', val: count}
+        ];
+        if (activePlan) {
+          stats.splice(1, 0, {label:'Target this Week', val: weeklyTarget.toFixed(1)});
+        }
+        stats.push(
+          {label:'Workouts this Week', val: workoutCount},
+          {label:'Weight Entries', val: weightCount}
+        );
+
+        const container = qs('#weekStats');
+        container.innerHTML = '';
+        for(const s of stats){
+          const el = document.createElement('div'); el.className='stat';
+          el.innerHTML = `<div class="num">${s.val}</div><div class="small muted">${s.label}</div>`;
+          container.appendChild(el);
+        }
+
+        // Show/hide average progress bar with 3-color system
+        if(activePlan && weeklyTarget > 0){
+          averageProgress.style.display = 'block';
+          const progressPercentage = Math.min(100, Math.round((totalKm / weeklyTarget) * 100));
+          
+          // Set progress bar color based on percentage
+          if (progressPercentage < 50) {
+            progressBar.className = 'progress-bar progress-red';
+          } else if (progressPercentage < 80) {
+            progressBar.className = 'progress-bar progress-amber';
+          } else {
+            progressBar.className = 'progress-bar progress-green';
+          }
+          
+          progressBar.style.width = `${progressPercentage}%`;
+          progressText.textContent = `Average Progress: ${progressPercentage}%`;
+        } else {
+          averageProgress.style.display = 'none';
+        }
+      }
+
+      // Plan stats
+      function renderPlanStats(activePlan){
+        getWeeklyTarget(activePlan, 0); // ensure initialized
+        let overallGoal = 0;
+        for(let i=0; i<activePlan.weeks; i++){
+          overallGoal += getWeeklyTarget(activePlan, i);
+        }
+        const planStart = parseISO(activePlan.startDate);
+        const planIsos = [];
+        for(let w=0; w<activePlan.weeks; w++){
+          for(let d=0; d<7; d++){
+            planIsos.push(isoDate(addDays(addDays(planStart, w*7), d)));
+          }
+        }
+        const runs = (state.runs || []).filter(r=> planIsos.includes(r.date));
+        const planWorkouts = (state.workouts || []).filter(w=> planIsos.includes(w.date));
+        const planWeights = (state.weights || []).filter(w=> planIsos.includes(w.date));
+        const totalKm = runs.reduce((s,r)=> s + (parseFloat(r.distance_km)||0), 0);
+        const count = runs.length;
+        const totalWorkouts = planWorkouts.length;
+        const totalWeights = planWeights.length;
+        const overallPct = overallGoal > 0 ? Math.round(totalKm / overallGoal * 100) : 0;
+        const icon = overallPct === 0 ? '❌' : (overallPct >= 100 ? '✅' : '○');
+
+        const stats = [
+          {label:'Total KM', val: totalKm.toFixed(2)},
+          {label:'Target Goal', val: overallGoal.toFixed(1)},
+          {label:'Achieved', val: `${overallPct}% ${icon}`},
+          {label:'Runs', val: count},
+          {label:'Workouts', val: totalWorkouts},
+          {label:'Weight Entries', val: totalWeights}
+        ];
+
+        const container = qs('#weekStats');
+        container.innerHTML = '';
+        for(const s of stats){
+          const el = document.createElement('div'); el.className='stat';
+          el.innerHTML = `<div class="num">${s.val}</div><div class="small muted">${s.label}</div>`;
+          container.appendChild(el);
+        }
+
+        // Show/hide average progress bar for plan view with 3-color system
+        if(activePlan && overallGoal > 0){
+          averageProgress.style.display = 'block';
+          const progressPercentage = Math.min(100, Math.round((totalKm / overallGoal) * 100));
+          
+          // Set progress bar color based on percentage
+          if (progressPercentage < 50) {
+            progressBar.className = 'progress-bar progress-red';
+          } else if (progressPercentage < 80) {
+            progressBar.className = 'progress-bar progress-amber';
+          } else {
+            progressBar.className = 'progress-bar progress-green';
+          }
+          
+          progressBar.style.width = `${progressPercentage}%`;
+          progressText.textContent = `Overall Progress: ${progressPercentage}%`;
+        } else {
+          averageProgress.style.display = 'none';
+        }
+      }
+
+      // Plan details
+      function renderPlanDetails(){
+        const p = state.plans.find(x=>x.id===state.activePlanId);
+        if(!p){ planDetails.innerHTML = 'Select a plan to see details.'; editGoalBtn.style.display = 'none'; return; }
+        editGoalBtn.style.display = 'block';
+        getWeeklyTarget(p, 0); // ensure initialized
+        let overallGoal = 0;
+        for(let i=0; i<p.weeks; i++){
+          overallGoal += getWeeklyTarget(p, i);
+        }
+        let html = `<div style="font-weight:700">${escapeHtml(p.name)}</div>`;
+        html += `<div class="plan-meta">Start: ${p.startDate} • End: ${p.endDate} • ${p.weeks} week(s)</div>`;
+        html += `<div class="plan-meta">Goal: ${escapeHtml(p.goal || 'None set')}</div>`;
+        html += `<div class="plan-meta">Total plan volume: ${overallGoal.toFixed(1)} KM</div>`;
+        planDetails.innerHTML = html;
+      }
+
+      // Edit goal modal
+      editGoalBtn.addEventListener('click', ()=>{
+        const activePlan = state.plans.find(p => p.id === state.activePlanId);
+        if (!activePlan) { alert('No active plan selected.'); return; }
+        showModal(`
+          <h3>Add/Edit Target Goal</h3>
+          <div class="form-group">
+            <label for="eg_goal">Target goal</label>
+            <input id="eg_goal" value="${escapeHtmlAttr(activePlan.goal || '')}" placeholder="e.g. Build to 50km/week • Race: 1:45 half on final Sunday"/>
+          </div>
+          <div class="modal-actions">
+            <button id="eg_save">Save</button>
+            <button id="eg_cancel" class="btn-ghost">Cancel</button>
+          </div>
+        `);
+        setTimeout(() => {
+          const egSave = qs('#eg_save');
+          const egCancel = qs('#eg_cancel');
+          if (egCancel) egCancel.addEventListener('click', hideModal);
+          if (egSave) egSave.addEventListener('click', ()=>{
+            const newGoal = qs('#eg_goal').value.trim();
+            const planIndex = state.plans.findIndex(p => p.id === activePlan.id);
+            if (planIndex !== -1) {
+              state.plans[planIndex].goal = newGoal;
+              saveState(state);
+            }
+            hideModal();
+          });
+        }, 0);
+      });
+
+      // Quick log modal - only show dates within active plan
+      function openQuickLog(iso){
+        const activePlan = state.plans.find(p => p.id === state.activePlanId);
+        let dateInput = '';
+        
+        if (activePlan) {
+          // If no specific date provided, use today if in plan, otherwise use plan start date
+          if (!iso) {
+            const today = todayISO();
+            if (isDateInPlan(activePlan, today)) {
+              dateInput = today;
+            } else {
+              dateInput = activePlan.startDate;
+            }
+          } else {
+            dateInput = iso;
+          }
+        } else {
+          dateInput = iso || todayISO();
+        }
+        
+        showModal(`
+          <h3>Log run</h3>
+          <div class="form-group">
+            <label for="q_date">Date</label>
+            <input id="q_date" type="date" value="${dateInput}" ${activePlan ? 'min="' + activePlan.startDate + '" max="' + activePlan.endDate + '"' : ''}/>
+          </div>
+          <div class="form-group">
+            <label for="q_dist">Distance (km)</label>
+            <input id="q_dist" type="number" step="0.01" placeholder="e.g. 8.5"/>
+          </div>
+          <div class="form-group">
+            <label for="q_time">Time (min)</label>
+            <input id="q_time" type="number" step="1" placeholder="e.g. 45"/>
+          </div>
+          <div class="form-group">
+            <label for="q_notes">Notes</label>
+            <input id="q_notes" placeholder="intervals, easy, race, etc"/>
+          </div>
+          <div class="modal-actions">
+            <button id="q_save">Save</button>
+            <button id="q_cancel" class="btn-ghost">Cancel</button>
+          </div>
+        `);
+        setTimeout(() => {
+          const qSave = qs('#q_save');
+          const qCancel = qs('#q_cancel');
+          if (qCancel) qCancel.addEventListener('click', hideModal);
+          if (qSave) qSave.addEventListener('click', ()=>{
+            const date = qs('#q_date').value;
+            const distance_km = parseFloat(qs('#q_dist').value) || 0;
+            const time_min = parseFloat(qs('#q_time').value) || 0;
+            const notes = qs('#q_notes').value.trim();
+            if(!date){ alert('Enter a date'); return; }
+            // Check if date is within active plan if there is one
+            if (activePlan && !isDateInPlan(activePlan, date)) {
+              alert('Selected date is not within the active plan dates.');
+              return;
+            }
+            const run = { id: uid(9), date, distance_km, time_min, notes, planId: state.activePlanId || null, createdAt: new Date().toISOString() };
+            state.runs.push(run);
+            saveState(state);
+            hideModal();
+          });
+        }, 0);
+      }
+
+      // Quick workout modal - only show dates within active plan
+      function openQuickWorkout(iso){
+        const activePlan = state.plans.find(p => p.id === state.activePlanId);
+        let dateInput = '';
+        
+        if (activePlan) {
+          // If no specific date provided, use today if in plan, otherwise use plan start date
+          if (!iso) {
+            const today = todayISO();
+            if (isDateInPlan(activePlan, today)) {
+              dateInput = today;
+            } else {
+              dateInput = activePlan.startDate;
+            }
+          } else {
+            dateInput = iso;
+          }
+        } else {
+          dateInput = iso || todayISO();
+        }
+        
+        showModal(`
+          <h3>Log workout</h3>
+          <div class="form-group">
+            <label for="qw_date">Date</label>
+            <input id="qw_date" type="date" value="${dateInput}" ${activePlan ? 'min="' + activePlan.startDate + '" max="' + activePlan.endDate + '"' : ''}/>
+          </div>
+          <div class="form-group">
+            <label for="qw_type">Type</label>
+            <select id="qw_type">
+              <option value="strength" selected>Strength</option>
+              <option value="stairstepper">Stairstepper</option>
+              <option value="hiit">HIIT</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="qw_notes">Notes</label>
+            <input id="qw_notes" placeholder="e.g. weights, yoga"/>
+          </div>
+          <div class="modal-actions">
+            <button id="qw_save">Save</button>
+            <button id="qw_cancel" class="btn-ghost">Cancel</button>
+          </div>
+        `);
+        setTimeout(() => {
+          const qwSave = qs('#qw_save');
+          const qwCancel = qs('#qw_cancel');
+          if (qwCancel) qwCancel.addEventListener('click', hideModal);
+          if (qwSave) qwSave.addEventListener('click', ()=>{
+            const date = qs('#qw_date').value;
+            const type = qs('#qw_type').value;
+            const notes = qs('#qw_notes').value.trim();
+            if(!date){ alert('Enter a date'); return; }
+            if(!type){ alert('Select a type'); return; }
+            // Check if date is within active plan if there is one
+            if (activePlan && !isDateInPlan(activePlan, date)) {
+              alert('Selected date is not within the active plan dates.');
+              return;
+            }
+            const workout = { id: uid(9), date, type, notes, planId: state.activePlanId || null, createdAt: new Date().toISOString() };
+            state.workouts.push(workout);
+            saveState(state);
+            hideModal();
+          });
+        }, 0);
+      }
+
+      // Quick weight modal - only show dates within active plan
+      function openQuickWeight(iso){
+        const activePlan = state.plans.find(p => p.id === state.activePlanId);
+        let dateInput = '';
+        
+        if (activePlan) {
+          // If no specific date provided, use today if in plan, otherwise use plan start date
+          if (!iso) {
+            const today = todayISO();
+            if (isDateInPlan(activePlan, today)) {
+              dateInput = today;
+            } else {
+              dateInput = activePlan.startDate;
+            }
+          } else {
+            dateInput = iso;
+          }
+        } else {
+          dateInput = iso || todayISO();
+        }
+        
+        showModal(`
+          <h3>Log weight</h3>
+          <div class="form-group">
+            <label for="qw_date">Date</label>
+            <input id="qw_date" type="date" value="${dateInput}" ${activePlan ? 'min="' + activePlan.startDate + '" max="' + activePlan.endDate + '"' : ''}/>
+          </div>
+          <div class="form-group">
+            <label for="qw_weight">Weight (kg)</label>
+            <input id="qw_weight" type="number" step="0.1" placeholder="e.g. 75.5"/>
+          </div>
+          <div class="form-group">
+            <label for="qw_notes">Notes</label>
+            <input id="qw_notes" placeholder="e.g. morning, after workout"/>
+          </div>
+          <div class="modal-actions">
+            <button id="qw_save">Save</button>
+            <button id="qw_cancel" class="btn-ghost">Cancel</button>
+          </div>
+        `);
+        setTimeout(() => {
+          const qwSave = qs('#qw_save');
+          const qwCancel = qs('#qw_cancel');
+          if (qwCancel) qwCancel.addEventListener('click', hideModal);
+          if (qwSave) qwSave.addEventListener('click', ()=>{
+            const date = qs('#qw_date').value;
+            const weight_kg = parseFloat(qs('#qw_weight').value) || 0;
+            const notes = qs('#qw_notes').value.trim();
+            if(!date){ alert('Enter a date'); return; }
+            if(!weight_kg || weight_kg <= 0){ alert('Enter a valid weight'); return; }
+            // Check if date is within active plan if there is one
+            if (activePlan && !isDateInPlan(activePlan, date)) {
+              alert('Selected date is not within the active plan dates.');
+              return;
+            }
+            const weight = { id: uid(9), date, weight_kg, notes, planId: state.activePlanId || null, createdAt: new Date().toISOString() };
+            state.weights.push(weight);
+            saveState(state);
+            hideModal();
+          });
+        }, 0);
+      }
+
+      addRunBtn.addEventListener('click', () => openQuickLog());
+      addWorkoutBtn.addEventListener('click', () => openQuickWorkout());
+      addWeightBtn.addEventListener('click', () => openQuickWeight());
+
+      // Show modal to edit run
+      function showModalRunEdit(r){
+        const activePlan = state.plans.find(p => p.id === state.activePlanId);
+        showModal(`
+          <h3>Edit run</h3>
+          <div class="form-group">
+            <label for="e_date">Date</label>
+            <input id="e_date" type="date" value="${r.date}" ${activePlan ? 'min="' + activePlan.startDate + '" max="' + activePlan.endDate + '"' : ''}/>
+          </div>
+          <div class="form-group">
+            <label for="e_dist">Distance (km)</label>
+            <input id="e_dist" type="number" step="0.01" value="${r.distance_km}"/>
+          </div>
+          <div class="form-group">
+            <label for="e_time">Time (min)</label>
+            <input id="e_time" type="number" step="1" value="${r.time_min}"/>
+          </div>
+          <div class="form-group">
+            <label for="e_notes">Notes</label>
+            <input id="e_notes" value="${escapeHtmlAttr(r.notes||'')}"/>
+          </div>
+          <div class="form-group">
+            <label for="e_plan">Link to plan</label>
+            <select id="e_plan">
+              <option value="">— none —</option>
+              ${state.plans.map(p=>`<option value="${p.id}" ${p.id===r.planId?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button id="e_save">Save</button>
+            <button id="e_delete" class="btn-ghost" style="background:#ef4444;color:white">Delete</button>
+            <button id="e_cancel" class="btn-ghost">Close</button>
+          </div>
+        `);
+        setTimeout(() => {
+          const eSave = qs('#e_save');
+          const eDelete = qs('#e_delete');
+          const eCancel = qs('#e_cancel');
+          if (eCancel) eCancel.addEventListener('click', hideModal);
+          if (eSave) eSave.addEventListener('click', ()=>{
+            const date = qs('#e_date').value;
+            const distance_km = parseFloat(qs('#e_dist').value) || 0;
+            const time_min = parseFloat(qs('#e_time').value) || 0;
+            const notes = qs('#e_notes').value.trim();
+            const planId = qs('#e_plan').value || null;
+            // Check if date is within the selected plan if there is one
+            if (planId) {
+              const selectedPlan = state.plans.find(p => p.id === planId);
+              if (selectedPlan && !isDateInPlan(selectedPlan, date)) {
+                alert('Selected date is not within the plan dates.');
+                return;
+              }
+            }
+            state.runs = state.runs.map(x => x.id===r.id ? Object.assign({},x,{date, distance_km, time_min, notes, planId}) : x);
+            saveState(state);
+            hideModal();
+          });
+          if (eDelete) eDelete.addEventListener('click', ()=>{
+            if(confirm('Delete this run?')){
+              removeRun(r.id);
+              hideModal();
+            }
+          });
+        }, 0);
+      }
+
+      // Show modal to edit workout
+      function showModalWorkoutEdit(w){
+        const activePlan = state.plans.find(p => p.id === state.activePlanId);
+        showModal(`
+          <h3>Edit workout</h3>
+          <div class="form-group">
+            <label for="ew_date">Date</label>
+            <input id="ew_date" type="date" value="${w.date}" ${activePlan ? 'min="' + activePlan.startDate + '" max="' + activePlan.endDate + '"' : ''}/>
+          </div>
+          <div class="form-group">
+            <label for="ew_type">Type</label>
+            <select id="ew_type">
+              <option value="strength" ${w.type==='strength'?'selected':''}>Strength</option>
+              <option value="stairstepper" ${w.type==='stairstepper'?'selected':''}>Stairstepper</option>
+              <option value="hiit" ${w.type==='hiit'?'selected':''}>HIIT</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ew_notes">Notes</label>
+            <input id="ew_notes" value="${escapeHtmlAttr(w.notes||'')}"/>
+          </div>
+          <div class="form-group">
+            <label for="ew_plan">Link to plan</label>
+            <select id="ew_plan">
+              <option value="">— none —</option>
+              ${state.plans.map(p=>`<option value="${p.id}" ${p.id===w.planId?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button id="ew_save">Save</button>
+            <button id="ew_delete" class="btn-ghost" style="background:#ef4444;color:white">Delete</button>
+            <button id="ew_cancel" class="btn-ghost">Close</button>
+          </div>
+        `);
+        setTimeout(() => {
+          const ewSave = qs('#ew_save');
+          const ewDelete = qs('#ew_delete');
+          const ewCancel = qs('#ew_cancel');
+          if (ewCancel) ewCancel.addEventListener('click', hideModal);
+          if (ewSave) ewSave.addEventListener('click', ()=>{
+            const date = qs('#ew_date').value;
+            const type = qs('#ew_type').value;
+            const notes = qs('#ew_notes').value.trim();
+            const planId = qs('#ew_plan').value || null;
+            // Check if date is within the selected plan if there is one
+            if (planId) {
+              const selectedPlan = state.plans.find(p => p.id === planId);
+              if (selectedPlan && !isDateInPlan(selectedPlan, date)) {
+                alert('Selected date is not within the plan dates.');
+                return;
+              }
+            }
+            state.workouts = state.workouts.map(x => x.id===w.id ? Object.assign({},x,{date, type, notes, planId}) : x);
+            saveState(state);
+            hideModal();
+          });
+          if (ewDelete) ewDelete.addEventListener('click', ()=>{
+            if(confirm('Delete this workout?')){
+              removeWorkout(w.id);
+              hideModal();
+            }
+          });
+        }, 0);
+      }
+
+      // Show modal to edit weight
+      function showModalWeightEdit(w){
+        const activePlan = state.plans.find(p => p.id === state.activePlanId);
+        showModal(`
+          <h3>Edit weight</h3>
+          <div class="form-group">
+            <label for="ew_date">Date</label>
+            <input id="ew_date" type="date" value="${w.date}" ${activePlan ? 'min="' + activePlan.startDate + '" max="' + activePlan.endDate + '"' : ''}/>
+          </div>
+          <div class="form-group">
+            <label for="ew_weight">Weight (kg)</label>
+            <input id="ew_weight" type="number" step="0.1" value="${w.weight_kg}"/>
+          </div>
+          <div class="form-group">
+            <label for="ew_notes">Notes</label>
+            <input id="ew_notes" value="${escapeHtmlAttr(w.notes||'')}"/>
+          </div>
+          <div class="form-group">
+            <label for="ew_plan">Link to plan</label>
+            <select id="ew_plan">
+              <option value="">— none —</option>
+              ${state.plans.map(p=>`<option value="${p.id}" ${p.id===w.planId?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button id="ew_save">Save</button>
+            <button id="ew_delete" class="btn-ghost" style="background:#ef4444;color:white">Delete</button>
+            <button id="ew_cancel" class="btn-ghost">Close</button>
+          </div>
+        `);
+        setTimeout(() => {
+          const ewSave = qs('#ew_save');
+          const ewDelete = qs('#ew_delete');
+          const ewCancel = qs('#ew_cancel');
+          if (ewCancel) ewCancel.addEventListener('click', hideModal);
+          if (ewSave) ewSave.addEventListener('click', ()=>{
+            const date = qs('#ew_date').value;
+            const weight_kg = parseFloat(qs('#ew_weight').value) || 0;
+            const notes = qs('#ew_notes').value.trim();
+            const planId = qs('#ew_plan').value || null;
+            // Check if date is within the selected plan if there is one
+            if (planId) {
+              const selectedPlan = state.plans.find(p => p.id === planId);
+              if (selectedPlan && !isDateInPlan(selectedPlan, date)) {
+                alert('Selected date is not within the plan dates.');
+                return;
+              }
+            }
+            state.weights = state.weights.map(x => x.id===w.id ? Object.assign({},x,{date, weight_kg, notes, planId}) : x);
+            saveState(state);
+            hideModal();
+          });
+          if (ewDelete) ewDelete.addEventListener('click', ()=>{
+            if(confirm('Delete this weight entry?')){
+              removeWeight(w.id);
+              hideModal();
+            }
+          });
+        }, 0);
+      }
+
+      // Modal helpers
+      function showModal(html){
+        const root = qs('#modalRoot'); root.style.display='flex';
+        qs('#modalContent').innerHTML = html;
+      }
+      function hideModal(){ qs('#modalRoot').style.display='none'; qs('#modalContent').innerHTML=''; }
+
+      // Export & import
+      exportBtn.addEventListener('click', ()=>{
+        const data = JSON.stringify(state, null, 2);
+        const blob = new Blob([data], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download = `runplan-export-${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      });
+
+      importFile.addEventListener('change', (e)=>{
+        const f = e.target.files[0]; if(!f) return;
+        const reader = new FileReader();
+        reader.onload = ev=>{
+          try{
+            const parsed = JSON.parse(ev.target.result);
+            if(!parsed.plans || !parsed.runs){ if(!confirm('File structure looks different. Merge anyway?')) return; }
+            const existingPlanIds = new Set(state.plans.map(p=>p.id));
+            const existingRunIds = new Set(state.runs.map(r=>r.id));
+            const existingWorkoutIds = new Set(state.workouts.map(w=>w.id));
+            const existingWeightIds = new Set(state.weights.map(w=>w.id));
+            for(const p of parsed.plans||[]){
+              if(existingPlanIds.has(p.id)){ p.id = uid(9); }
+              state.plans.push(p);
+            }
+            for(const r of parsed.runs||[]){
+              if(existingRunIds.has(r.id)){ r.id = uid(9); }
+              state.runs.push(r);
+            }
+            for(const w of parsed.workouts||[]){
+              if(existingWorkoutIds.has(w.id)){ w.id = uid(9); }
+              state.workouts.push(w);
+            }
+            for(const w of parsed.weights||[]){
+              if(existingWeightIds.has(w.id)){ w.id = uid(9); }
+              state.weights.push(w);
+            }
+            saveState(state);
+            alert('Import complete.');
+          }catch(err){ alert('Invalid JSON file'); }
+        };
+        reader.readAsText(f);
+        e.target.value = '';
+      });
+
+      clearAll.addEventListener('click', ()=>{
+        if(confirm('Reset app: remove all plans and runs from this browser?')){ state = {plans:[], runs:[], workouts:[], weights:[], activePlanId:null}; saveState(state); }
+      });
+
+      // week nav
+      prevWeek.addEventListener('click', ()=> { 
+        if (!prevWeek.disabled) {
+          currentWeekStart = addDays(currentWeekStart, -7); 
+          renderCalendar(); 
+        }
+      });
+      
+      nextWeek.addEventListener('click', ()=> { 
+        if (!nextWeek.disabled) {
+          currentWeekStart = addDays(currentWeekStart, 7); 
+          renderCalendar(); 
+        }
+      });
+
+      // toggle view
+      toggleView.addEventListener('click', ()=>{
+        viewMode = viewMode === 'week' ? 'plan' : 'week';
+        toggleView.textContent = viewMode === 'week' ? 'All weeks' : 'Single week';
+        renderCalendar();
+      });
+
+      // run modal close on backdrop click
+      qs('#modalBackdrop').addEventListener('click', hideModal);
+
+      // Helpers: escape
+      function escapeHtml(s){ if(!s) return ''; return (s+'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+      function escapeHtmlAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
+
+      // initial render
+      function renderAll(){
+        state = loadState();
+        renderPlans();
+        renderCalendar();
+      }
+
+      // startup defaults
+      if(!state.plans || state.plans.length===0){
+        // leave empty by default; user can create quick template
+      }
+
+      // Seed demo if empty and first-time user (optional)
+      if((state.plans||[]).length===0 && (state.runs||[]).length===0 && (state.workouts||[]).length===0 && (state.weights||[]).length===0 && !localStorage.getItem('runplan_seenDemo')){
+        const todaySun = isoDate(startOfWeek(new Date()));
+        const endDate = isoDate(addDays(todaySun, 13));
+        const demoPlan = { id: uid(9), name: 'Demo 2-week starter', startDate: todaySun, endDate, weeks:2, goal: 'Build to 30km/week', dailyTargets: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]], createdAt: new Date().toISOString() };
+        const demoRun = { id: uid(9), date: todayISO(), distance_km:5, time_min:30, notes:'Easy demo run', planId: demoPlan.id, createdAt: new Date().toISOString() };
+        const demoWorkout = { id: uid(9), date: todayISO(), type:'strength', notes:'Bodyweight circuit', planId: demoPlan.id, createdAt: new Date().toISOString() };
+        const demoWeight = { id: uid(9), date: todayISO(), weight_kg:75.5, notes:'Morning weight', planId: demoPlan.id, createdAt: new Date().toISOString() };
+        state.plans.push(demoPlan); state.runs.push(demoRun); state.workouts.push(demoWorkout); state.weights.push(demoWeight); state.activePlanId = demoPlan.id;
+        localStorage.setItem('runplan_seenDemo','1');
+        saveState(state);
+      } else {
+        renderAll();
+      }
+
+      // Helper: render immediately after any storage change (saveState calls it)
+      window.runplanSave = saveState;
+
+      // Escape hatch for dev: show console info
+      console.info('RunPlan loaded — use runplanSave(state) to save programmatically.');
+    })();
+  </script>
+</body>
+</html>
